@@ -11,9 +11,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from model_RNN import RNN
+from model_CNN import CNN
+from model_baseline import baseline
 
 def main(args):
 
+    # Loading training data, tokenizing, and producing word vectors:
     TEXT = data.Field(sequential=True,lower=True, tokenize='spacy', include_lengths=True)
     LABELS = data.Field(sequential=False, use_vocab=False)
 
@@ -32,12 +35,19 @@ def main(args):
 
     print("Shape of Vocab:", TEXT.vocab.vectors.shape)
 
-    # Model:
-    model = RNN(args.emb_dim, vocab, args.rnn_hidden_dim)
-
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    # Models:
+    if model == "baseline":
+        model = Baseline(emb_dim, vocab)
+    elif model == "rnn":
+        model = RNN(emb_dim, vocab, rnn_hidden_dim)
+    elif model == "cnn":
+        model = CNN(emb_dim, vocab, n_filters, filter_size)
+    
+    # Optimization method and loss function:
+    optimizer = optim.Adam(model.parameters(), lr=lr)
     bce_loss = nn.BCEWithLogitsLoss()
 
+    # Validation and Testing Set Evaluation:
     def evaluate(model, val_loader):
         v_accuracy = 0
         vloss = 0
@@ -77,6 +87,7 @@ def main(args):
             batch_tracker += 1
         training_loss += [epoch_loss / batch_tracker]
         training_accuracy += [epoch_accuracy / batch_tracker]
+        
         # Evaluating the validation and testing data, as well as giving the losses and accuracies for all 3:
         if (epoch + 1) % 1 == 0:
             print("Epoch: ", f'{epoch + 1}', ", Training Loss: ", f'{epoch_loss / batch_tracker:.4f}',
