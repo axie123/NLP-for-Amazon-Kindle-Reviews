@@ -10,13 +10,13 @@ class RNN(nn.Module):
         self.h_dim = hidden_dim
         self.GRU = nn.GRU(embedding_dim, hidden_dim)
         self.fc1 = nn.Linear(hidden_dim, 5)
-        self.fc2 = nn.Linear(5,1)
+        self.fc2 = nn.Linear(hidden_dim,1)
 
 
     def forward(self, x, lengths=None):
         embedded = self.embedding(x)
         embedded = nn.utils.rnn.pack_padded_sequence(embedded, lengths=lengths)
         _, x = self.GRU(embedded)
-        x = F.relu(self.fc1(x))
+        #x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
